@@ -35,18 +35,20 @@ class ChatGPT():
         return chat_gpt_classification
     
 
-    def text_classify_chatgpt_one_text_add_id(self, id_list, text_list, prompt, resulting_columns):
+    def text_classify_chatgpt_one_text(self, id_list, text_list, prompt, resulting_columns, separator='||'):
 
         # Setting the API key
         client = OpenAI(api_key=self.api_key)
 
-        df_chatgpt = pd.DataFrame(columns=['id','text']+resulting_columns)
+        if id_list:
+            columns = ['id', 'text']
+        else:
+            columns = ['text']
+
+        df_chatgpt = pd.DataFrame(columns=columns+resulting_columns)
 
         for i, text in enumerate(text_list):
             text = text.replace('\\', '')
-
-            print('_________________________________________')
-            print(text)
 
             completion = client.chat.completions.create(
                 model=self.model_name,
@@ -57,62 +59,18 @@ class ChatGPT():
                 temperature=0.2
             )
 
-            # print(i, completion)
             print(i, completion.choices[0].message.content)
 
             # chatgpt_classification = json.loads(completion.choices[0].message.content)
-            if '||' not in completion.choices[0].message.content:
+            if separator not in completion.choices[0].message.content:
                 chatgpt_classification = [None]*len(resulting_columns)
             else:
-                chatgpt_classification = completion.choices[0].message.content.split('||')
+                chatgpt_classification = completion.choices[0].message.content.split(separator)
 
-            data = {
-                    'id': [id_list[i]],
-                    'text':[text],
-                    # 'classification':[chatgpt_classification['Classification']],
-                    # 'explanation':[chatgpt_classification['Explanation']]
-                  }
+            data = {'text': [text]}
 
-            for x, col in enumerate(resulting_columns):
-                # data[col] = [chatgpt_classification[col]]
-                data[col] = [chatgpt_classification[x]]
-
-            df_chatgpt = pd.concat([df_chatgpt, pd.DataFrame.from_dict(data)])
-
-        return df_chatgpt  
-     
-
-    def text_classify_chatgpt_one_text(self, text_list, prompt, resulting_columns):
-        # Setting the API key
-        client = OpenAI(api_key=self.api_key)
-
-        df_chatgpt = pd.DataFrame(columns=['text']+resulting_columns)
-
-        for i, text in enumerate(text_list):
-            text = text.replace('\\', '')
-            print('-----------------------------')
-            print(text)
-
-            completion = client.chat.completions.create(
-                model=self.model_name,
-                messages=[
-                    {"role": "system", "content": prompt},
-                    {"role":"user", "content":"```"+text+"```"}
-                ],
-                temperature=0.2
-            )
-
-            # print(i, completion)
-            print(i, completion.choices[0].message.content)
-
-            # chatgpt_classification = json.loads(completion.choices[0].message.content)
-            chatgpt_classification = completion.choices[0].message.content.split('||')
-
-            data = {
-                    'text':[text],
-                    # 'classification':[chatgpt_classification['Classification']],
-                    # 'explanation':[chatgpt_classification['Explanation']]
-                  }
+            if id_list:
+                data['id'] = [id_list[i]]
 
             for x, col in enumerate(resulting_columns):
                 # data[col] = [chatgpt_classification[col]]
@@ -147,7 +105,7 @@ class ChatGPT():
             if classify_one_text_per_time:
                 if id_column:
                     id_list = list(data_frame.iloc[first_index:second_index][id_column].values)
-                    df_chatgpt = self.text_classify_chatgpt_one_text_add_id(id_list=id_list, text_list=text_list, prompt=prompt, resulting_columns=resulting_columns)
+                    df_chatgpt = self.text_classify_chatgpt_one_text(id_list=id_list, text_list=text_list, prompt=prompt, resulting_columns=resulting_columns)
                 else:    
                     df_chatgpt = self.text_classify_chatgpt_one_text(text_list=text_list, prompt=prompt, resulting_columns=resulting_columns)
             else:
@@ -175,7 +133,6 @@ class ChatGPT():
 
         df_results.drop_duplicates(subset=[id_column], inplace=True)
 
-
         column_to_filter = text_column # id_column
 
         values_in_results = set(df_results[column_to_filter])
@@ -195,7 +152,7 @@ class ChatGPT():
                 text_list = list(df_to_classify.iloc[first_index:second_index][text_column].values)
                 id_list = list(df_to_classify.iloc[first_index:second_index][id_column].values)
 
-                df_chatgpt = self.text_classify_chatgpt_one_text_add_id(id_list=id_list, text_list=text_list, prompt=prompt, resulting_columns=resulting_columns)
+                df_chatgpt = self.text_classify_chatgpt_one_text(id_list=id_list, text_list=text_list, prompt=prompt, resulting_columns=resulting_columns)
 
                 df_results_batch = pd.concat([df_results_batch, df_chatgpt], axis=0)
 

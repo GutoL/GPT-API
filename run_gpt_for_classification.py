@@ -1,16 +1,16 @@
 import pandas as pd
 import json
-from gpt_class import ChatGPT
+from code.gpt_class import ChatGPT
 import sys
 
 
 assert len(sys.argv) == 4, "Please, run the code: python run_gpt_for_classification.py <year> <batch> <key_name>"
 
 
-chat_gpt_keys = json.load(open('../open_ai_keys.json'))
+chat_gpt_keys = json.load(open('config/open_ai_keys.json'))
 chatgpt_client = ChatGPT(api_key=chat_gpt_keys[sys.argv[3]], model_name='gpt-3.5-turbo-1106') # 'gpt-4-1106-preview', 'gpt-3.5-turbo' 'gpt-3.5-turbo-1106'
 
-with open('hate_speech_prompt.txt', 'r') as file:
+with open('prompts/hate_speech_prompt.txt', 'r') as file:
     prompt = file.read()
 
 text_column = 'text'

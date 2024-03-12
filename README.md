@@ -11,7 +11,7 @@ pip install -r requirements.txt
 ```
 ## Basic Usage
 
-Please, refer to the file run_gpt_for_classification.py file to see and example of how to classify a data frame using the OpenAI API.
+Please, refer to the file `run_gpt_for_classification.py` file to see and example of how to classify a data frame using the OpenAI API.
 
 ## Contributing
 Contributions are welcome! Please feel free to submit a pull request or open an issue for any bug fixes, improvements, or feature requests.
